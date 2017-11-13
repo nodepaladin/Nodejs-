@@ -1,7 +1,10 @@
 # Thinking-in-Nodejs
 ### 1.Nodejs Eventloop，Timers and process.nextTick()
 #### 什么是Eventloop
-Eventloop是允许Nodejs执行非阻塞I/O操作的核心架构，尽管事实上JavaScript是单线程-随时可能撂挑子给系统内核
+Eventloop是允许Nodejs执行非阻塞I/O操作的核心架构，尽管事实上JavaScript是单线程-随时可能撂挑子给系统内核  
+因为大部分现代内核都是多线程，他们可以在后台并行处理多个任务。当其中一个任务完成，内核就告诉Nodejs，将其对应的回调callback放入轮询队列（poll queue），这个回调将会在一定时机被执行。下面将会把这些问题展开讨论。
+#### Eventloop详解
+当Nodejs启动的时候，会初始化Eventloop，
 ```
    ┌───────────────────────┐
 ┌─>│        timers         │
