@@ -45,4 +45,8 @@ Eventloop是允许Nodejs执行非阻塞I/O操作的核心架构，尽管事实�
 **setTimeout(fn, xxx):** 将fn放到任务队列尾部  
 **setTimeout(fn, 0):** 将放到任务对列首部  
 **nextTick(fn):** 将fn放到执行队列尾部  
-**setImmediate():** 和setTimeout(fn, 0)类似，将fn放到任务队列头部  
+**setImmediate():** 和setTimeout(fn, 0)类似，将fn放到任务队列头部  
+在event loop每次运行期间，Nodejs会检查他是否在等待一些异步I/O或者timer，如果没有（异步I/O或者timer），则完全关闭event loop。  
+### 阶段详细介绍  
+#### timers  
+定时器在给定回调后边指定了回调可能执行的时间阈值，而不是某个人期望回调执行的准确时间。定时器回调将会尽可能早的在其定义后的指定时间执行，无论如何，操作系统计划任务或者其他回调都可能会使定时器回调延迟执行。  
