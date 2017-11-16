@@ -37,7 +37,7 @@ Eventloop是允许Nodejs执行非阻塞I/O操作的核心架构，尽管事实�
 - idle，prepare 只被内部使用  
 - poll 检索新IO事件，Nodejs在这里可能会阻塞  
 - check setImmediate（）的回调在这个阶段被调用  
-- close callbacks 例如socket.on（'close',...）  
+- close callbacks 例如<code>socket.on（'close',...）</code>    
 
 
 **执行队列:** node中代码执行队列，非阻塞   
