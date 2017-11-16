@@ -53,20 +53,24 @@ Eventloop是允许Nodejs执行非阻塞I/O操作的核心架构，尽管事实�
 > Tips：从技术上说，poll阶段控制着何时定时器回调执行  
 
 举个例子，你定义了一个定时器回调在100ms后执行，同时一个其他的异步读文件操作（耗时95ms）开始执行。代码大致如下  
-<code>
+```
    const fs = require('fs');
    function someAsyncOperations(callback){
-      fs.readFile('/data/file.js', callback);
+   //假设这读取文件耗时95ms
+      fs.readFile('/data/file.js', callback);
    }
-   const timeoutScheduled = Date.now();
-   setTimeOut(() => {
+   //定时器开始时间
+   const timeoutScheduled = Date.now();
+   //定义定时器
+   setTimeOut(() => {
       let diffTime = Date.now() - timeoutScheduled;
       console.log(`延迟执行时间为${diffTime}`);
    }, 100);
    someAsyncOperations(() => {
       let now = Date.now();
       while(Date.now - now < 10){
-      }
+         //模拟执行时间10ms
+      }
    });
-</code>
+```
 
