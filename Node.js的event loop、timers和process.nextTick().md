@@ -75,9 +75,17 @@ Eventloop是允许Nodejs执行非阻塞I/O操作的核心架构，尽管事实�
 ```
 当event loop进入poll阶段的时候，poll这个时候只有个空的队列（fs.readFile()还没有完成，因此回调还没有进入回调队列），event loop在最早的定时器时间阈值之前将会等待数毫秒。当过去95ms的时候，fs.readFile()完成了读取操作，他的回调（需耗时10ms）被添加到poll的执行队列中并被执行。经过10ms这个回调执行完毕，此时队列中没有其他的回调，所以event loop看到最早的timer定时器阈值到了后就绕回timer阶段去执行定时器的回调。这个代码示例中，定时器被定义到定时器回调被执行之间的时间是105ms。  
 > 为了防止event loop在poll阶段饥饿，libuv（实现Node.js的event loop和所有平台异步行为的C语言库）在停止对更多事件轮询前设置了一个最大的轮询次数值（依赖系统）。  
-### I/O回调  
+#### I/O回调  
 这个阶段执行一些系统回调诸如TCP类型的错误。例如，如果一个TCP的socket尝试连接的时候收到了<code>ECONNREFUSED</code>，一些\*nix系统想要报告错误。这将在I/O阶段顺序执行。  
 #### poll  
 **poll** 阶段主要有两类函数：  
+- 执行已经到时的定时器脚本  
+- 处理poll队列中的事件  
+当event loop进入poll阶段且没有计划定时器，将会发生如下两种情况之一：  
+- 如果poll队列不为空，event loop将会循环访问poll队列并同步执行其中的回调函数直到遍历完或者遍历数到达系统上限。  
+- 如果poll队列为空，则会发生下面两种情况之一：  
+1）如果脚本是用setImmediate（）方法定义的，event loop将会结束poll阶段进入check阶段执行这些脚本。  
+2）如果没有用setImmediate（）定义脚本，event loop将会等待poll队列中被加入回调，然后立即执行。  
+一旦poll队列为空，event loop将会检查已到达阈值时间的计时器。如果一个或更多计时器时间到达，event loop将会绕回timers阶段去执行这些计时器的回调。  
 
 
