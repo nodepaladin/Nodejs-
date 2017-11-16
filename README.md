@@ -55,22 +55,18 @@ Eventloop是允许Nodejs执行非阻塞I/O操作的核心架构，尽管事实�
 举个例子，你定义了一个定时器回调在100ms后执行，同时一个其他的异步读文件操作（耗时95ms）开始执行。代码大致如下  
 <code>
    const fs = require('fs');
-   
    function someAsyncOperations(callback){
       fs.readFile('/data/file.js', callback);
    }
-   
    const timeoutScheduled = Date.now();
-   
    setTimeOut(() => {
       let diffTime = Date.now() - timeoutScheduled;
       console.log(`延迟执行时间为${diffTime}`);
    }, 100);
-   
    someAsyncOperations(() => {
       let now = Date.now();
       while(Date.now - now < 10){
       }
-   })
+   });
 </code>
 
