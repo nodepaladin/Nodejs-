@@ -81,13 +81,11 @@ Eventloop是允许Nodejs执行非阻塞I/O操作的核心架构，尽管事实�
 **poll** 阶段主要有两类函数：  
 - 执行已经到时的定时器脚本  
 - 处理poll队列中的事件  
-
 当event loop进入poll阶段且没有计划定时器，将会发生如下两种情况之一：  
-
 - 如果poll队列不为空，event loop将会循环访问poll队列并同步执行其中的回调函数直到遍历完或者遍历数到达系统上限。  
 - 如果poll队列为空，则会发生下面两种情况之一：  
-1.  如果脚本是用setImmediate（）方法定义的，event loop将会结束poll阶段进入check阶段执行这些脚本。  
-2.  如果没有用setImmediate（）定义脚本，event loop将会等待poll队列中被加入回调，然后立即执行。  
+  1.  如果脚本是用setImmediate（）方法定义的，event loop将会结束poll阶段进入check阶段执行这些脚本。  
+  2.  如果没有用setImmediate（）定义脚本，event loop将会等待poll队列中被加入回调，然后立即执行。  
 一旦poll队列为空，event loop将会检查已到达阈值时间的计时器。如果一个或更多计时器时间到达，event loop将会绕回timers阶段去执行这些计时器的回调。  
 
 
