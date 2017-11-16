@@ -32,7 +32,7 @@ Eventloop是允许Nodejs执行非阻塞I/O操作的核心架构，尽管事实�
 
 每个“阶段”都有一个先进先出（FIFO）的回调队列要执行。而每个阶段都有其独特的方式，一般的，当event loop进入一个给定的阶段，他将会执行那个阶段定义的所有操作，然后执行那个阶段队列中的回调直到这个队列耗尽或者到达回调的最大个数。当队列耗尽或者回调执行个数到达限制，event loop将会移向下一个阶段，以此类推  
 由于任何的这些操作可能会调度更多的操作和新事件被轮询阶段（poll phase）处理  
-### 阶段概览{#what}
+### <span id="what">阶段概览</span>
 - timers 这个阶段执行被函数setTimeout（）和setInterval（）调度的回调  
 - I/O callbacks 执行几乎所有timer、close、setImmediate（）异常  
 - idle，prepare 只被内部使用  
