@@ -1,7 +1,7 @@
 # Thinking-in-Nodejs
 [什么是Eventloop](#what)
 ## 1.Nodejs Eventloop，Timers and process.nextTick()
-### 什么是Eventloop{#what}
+### 什么是Eventloop
 Eventloop是允许Nodejs执行非阻塞I/O操作的核心架构，尽管事实上JavaScript是单线程-随时可能撂挑子给系统内核  
 因为大部分现代内核都是多线程，他们可以在后台并行处理多个任务。当其中一个任务完成，内核就告诉Nodejs，将其对应的回调callback放入轮询队列（poll queue），这个回调将会在一定时机被执行。下面将会把这些问题展开讨论。
 ### Eventloop详解
@@ -32,7 +32,7 @@ Eventloop是允许Nodejs执行非阻塞I/O操作的核心架构，尽管事实�
 
 每个“阶段”都有一个先进先出（FIFO）的回调队列要执行。而每个阶段都有其独特的方式，一般的，当event loop进入一个给定的阶段，他将会执行那个阶段定义的所有操作，然后执行那个阶段队列中的回调直到这个队列耗尽或者到达回调的最大个数。当队列耗尽或者回调执行个数到达限制，event loop将会移向下一个阶段，以此类推  
 由于任何的这些操作可能会调度更多的操作和新事件被轮询阶段（poll phase）处理  
-### 阶段概览  
+### 阶段概览{#what}
 - timers 这个阶段执行被函数setTimeout（）和setInterval（）调度的回调  
 - I/O callbacks 执行几乎所有timer、close、setImmediate（）异常  
 - idle，prepare 只被内部使用  
