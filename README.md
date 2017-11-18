@@ -1,5 +1,4 @@
 # Thinking-in-Nodejs
-- <a>什么是event loop</a>
 ## 1.Nodejs Eventloop，Timers and process.nextTick()
 ### 什么是Eventloop
 Eventloop是允许Nodejs执行非阻塞I/O操作的核心架构，尽管事实上JavaScript是单线程-随时可能撂挑子给系统内核  
