@@ -33,7 +33,7 @@ Eventloop是允许Nodejs执行非阻塞I/O操作的核心架构，尽管事实�
 由于任何的这些操作可能会调度更多的操作和新事件被轮询阶段（poll phase）处理  
 ### <span id="what">阶段概览</span>
 - timers 这个阶段执行被函数setTimeout（）和setInterval（）调度的回调  
-- I/O callbacks 执行几乎所有timer、close、setImmediate（）异常  
+- I/O callbacks 执行几乎所有除timer、close、setImmediate（）之外的回调  
 - idle，prepare 只被内部使用  
 - poll 检索新IO事件，Nodejs在这里可能会阻塞  
 - check setImmediate（）的回调在这个阶段被调用  
