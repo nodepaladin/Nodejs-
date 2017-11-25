@@ -35,17 +35,10 @@ Eventloop是允许Nodejs执行非阻塞I/O操作的核心架构，尽管事实�
 - timers 这个阶段执行被函数setTimeout（）和setInterval（）调度的回调  
 - I/O callbacks 执行几乎所有除timer、close、setImmediate（）之外的回调  
 - idle，prepare 只被内部使用  
-- poll 检索新IO事件，Nodejs在这里可能会阻塞  
+- poll 获取新的I/O事件，Nodejs在这里可能会阻塞  
 - check setImmediate（）的回调在这个阶段被调用  
 - close callbacks 例如<code>socket.on（'close',...）</code>    
-
-
-**执行队列:** node中代码执行队列，非阻塞   
-**任务队列:** 每当有异步任务执行完成就会将回调方法放入任务队列，当执行队列为空的时候，会执行执行队列中的回调事件  
-**setTimeout(fn, xxx):** 将fn放到任务队列尾部  
-**setTimeout(fn, 0):** 将放到任务对列首部  
-**nextTick(fn):** 将fn放到执行队列尾部  
-**setImmediate():** 和setTimeout(fn, 0)类似，将fn放到任务队列头部  
+  
 在event loop每次运行期间，Nodejs会检查他是否在等待一些异步I/O或者timer，如果没有（异步I/O或者timer），则完全关闭event loop。  
 ### 阶段详细介绍  
 #### timers  
@@ -91,5 +84,39 @@ Eventloop是允许Nodejs执行非阻塞I/O操作的核心架构，尽管事实�
 #### check
 这个阶段允许人在poll阶段完成后立即执行回调。如果poll阶段变得空闲并且脚本已经被setImmediate（）入列，event loop就可能执行check阶段而不是继续等待。
 setImmediate（）实际上是一个运行在event loop独立阶段的特殊定时器，他在poll阶段完成后使用libuv的API调度回调执行。
+通常的，当代码被执行，event loop最终会到达poll阶段等待连接、网络请求等的到来。无论如何，当setImmediate（）定义了回调函数，并且poll阶段变为idle的时候，event loop将会结束等待并去执行check阶段。  
+#### close callbacks  
+如果一个socket或者句柄突然被关闭（比如<code>socket.close()</code>），<code>close</code>事件将会在这个阶段被发出，否则将会被<code>process.nextTick()</code>  
+#### setImmediate() VS setTimeout()
+setImmediate()和setTimeout()非常像，但是调用的时机不同，他们的表现行为不同。
+- setImmediate（）被设计用来在poll阶段完成后执行一段脚本  
+- setTimeout()被设计用来在一段时间后执行一段脚本  
+timers执行的顺序的变化取决于他们被调用时的环境。如果两者都在主要模块内部被调用，那么计时过程将受到进程的性能约束（会受到运行在机器上的其他程序影响）  
+比如，如果我们在I/O循环外（也就是主模块）运行下面的脚本，两个计时器的执行顺序将是不确定的，那么执行顺序将会受到进程性能的约束。  
+```
+setTimeout(() => {
+    console.log('timeout');
+  }, 0);
+  
+  setImmediate(()=>{
+    console.log('immediate');
+  });
+  
+```
+然而，如果将timers移到I/O循环内部，则setImmediate()方法的回调总是首先执行。  
+```
+const fs = require('fs');
 
+fs.readFile('./hello', (error, data) => {
+  console.log('data is '+data)
+  setTimeout(() => {
+    console.log('timeout');
+  }, 0);
+  
+  setImmediate(()=>{
+    console.log('immediate');
+  })
+});
+
+```
 
