@@ -119,4 +119,5 @@ fs.readFile('./hello', (error, data) => {
 });
 
 ```
+使用setImmediate()的最大优点是在I/O周期内他的执行顺序总是先于任何的timer
 
