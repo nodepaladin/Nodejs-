@@ -120,4 +120,63 @@ fs.readFile('./hello', (error, data) => {
 
 ```
 使用setImmediate()的最大优点是在I/O周期内他的执行顺序总是先于任何的timer
+#### process.nextTick()
+##### 理解 <code>process.nextTick()</code>
+我们可能会注意到尽管process.nextTick()是异步API的一部分，但他并没有出现在event loop图示中。
+这是因为技术上process.nextTick()并不是event loop的部分。nextTickQueue将会在当前操作完成后被处理，
+而不是当前event loop阶段完成后。回头看event loop图示，任何时候在给定阶段调用process.nextTick()，
+所有传递给process.nextTick()的回调都会在eventloop继续执行前被调用。这个特性将会制造一些不好的场景，
+因为他允许通过递归调用process.nextTick(),阻止eventloop到达pool阶段造成“饥饿”I/O。  
+为什么类似会被设计到Nodejs中？这是“一个API始终是异步哪怕非必须”设计哲理的一部分。
+```
+function apiCall(arg, callback) {
+  if (typeof arg !== 'string')
+    return process.nextTick(callback,
+                            new TypeError('argument should be string'));
+}
+```
+代码片段做了一个参数校验，如果参数不正确，就会给回调函数callback传递一个错误。process.nextTick()第一个参数
+可以使一个方法，之后的参数作为该方法的执行参数。
+这段代码逻辑是会在剩余的代码执行后将一个错误返回给用户，通过使用process.nextTick()保证了apiCall()方法在用户剩余代码
+之后、eventloop继续执行之前执行定义在其中的回调方法callback。为了做到这样，js调用栈被允许解绑然后直接执行提供的回调
+callback函数-可以允许递归调用process.nextTick()而不会达到V8规定的最大递归数而抛出<code>RangeError: Maximum call stack size exceeded from v8</code>。
+这种设计哲学可能会导致一些潜在的问题。例如以下代码片段
+```
+let bar;
 
+// this has an asynchronous signature, but calls callback synchronously
+function someAsyncApiCall(callback) { callback(); }
+
+// the callback is called before `someAsyncApiCall` completes.
+someAsyncApiCall(() => {
+  // since someAsyncApiCall has completed, bar hasn't been assigned any value
+  console.log('bar', bar); // undefined
+});
+
+bar = 1;
+```
+用户定义了异步标识（名称）的someAsyncApiCall()方法，但是他内部代码实际上是同步执行的。当这个方法被调用，其内部的callback
+会同时被调用因为someAsyncApiCall()方法没有任何异步操作。结果是，callback尝试引用变量bar即使他还可能不存在于作用域中，因为
+脚本还没执行完毕，这个变量还没初始化。
+通过将callback放到process.nextTick()中，脚本依然可以执行完毕，允许变量、方法等在callback被调用之前初始化。
+他还有个有点就是可以阻塞eventloop继续执行，在event loop继续执行前弹出个错误可能对用户来说很有用。以下是使用process.nextTick()
+后的代码。
+```
+let bar;
+
+function someAsyncApiCall(callback) {
+  process.nextTick(callback);
+}
+
+someAsyncApiCall(() => {
+  console.log('bar', bar); // 1
+});
+
+bar = 1;
+```
+另外一个真实的例子
+```
+const server = net.createServer(() => {}).listen(8080);
+
+server.on('listening', () => {});
+```
