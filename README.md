@@ -181,5 +181,24 @@ const server = net.createServer(() => {}).listen(8080);
 server.on('listening', () => {});
 ```
 当只传递一个端口，端口直接被绑定。紧接着调用listening回调，问题是这个时候绑定listening回调的代码可能还没执行。
-解决这个问题的方案是，将listening事件设置到process.nextTick()中的队列里让其他代码先执行完成，这样绑定事件的代码写到任何地方都可以正常被调用。
-#### process.nextTick() VS setImmediate() 
+为了避免这样，在listen方法中将listening事件触发设置到process.nextTick()中的队列里让其他代码先执行完成，这样绑定事件的代码写到任何地方都可以被先于事件触发执行。
+#### process.nextTick() VS setImmediate()   
+这两个调用名字很具有迷惑性。
+- process.nextTick()在eventloop的同一阶段就会立即触发  
+- setImmediate()则会在event loop接下来的迭代‘tick’触发  
+本质上这两个方法名称调换一下更合适，process.nextTick()比setImmediate触发的更直接，但是这块是一个难以改变的历史原因。如果调换名称则会破坏npm上
+很大一部分现有的第三方包，每天都有更多的新包产生，意味着随着时间推移，这个代价会越大。虽然他们很容易混淆，但是名字本身是不能改变的。  
+推荐开发者尽量使用setImmediate()，因为他可读性更强且对js环境有更好的适应性（比如browser js）。  
+#### 为什么要使用process.nextTick() 
+- 允许用户处理错误，清理任何不需要的资源，或者在event loop继续执行之前重新发起request
+- 有些时候在调用栈解绑但是event loop继续之前执行一些回调还是很必要的  
+请看下面这个简单例子
+```
+const server = net.createServer();
+server.on('connection', (conn) => { });
+
+server.listen(8080);
+server.on('listening', () => { });
+```
+假设listen()方法在event loop开始的时候执行，但是listening回调方法被放在了setImmediate()方法中。除非传递一个主机名，绑定端口行为立即执行。
+为了让event loop继续执行，必须到达poll阶段。这意味着存在一种可能一个已被接收的connection允许在listening事件之前触发connection事件
