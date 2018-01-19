@@ -180,3 +180,6 @@ const server = net.createServer(() => {}).listen(8080);
 
 server.on('listening', () => {});
 ```
+当只传递一个端口，端口直接被绑定。紧接着调用listening回调，问题是这个时候绑定listening回调的代码可能还没执行。
+解决这个问题的方案是，将listening事件设置到process.nextTick()中的队列里让其他代码先执行完成，这样绑定事件的代码写到任何地方都可以正常被调用。
+#### process.nextTick() VS setImmediate() 
