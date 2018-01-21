@@ -200,5 +200,41 @@ server.on('connection', (conn) => { });
 server.listen(8080);
 server.on('listening', () => { });
 ```
-假设listen()方法在event loop开始的时候执行，但是listening回调方法被放在了setImmediate()方法中。除非传递一个主机名，绑定端口行为立即执行。
-为了让event loop继续执行，必须到达poll阶段。这意味着存在一种可能一个已被接收的connection允许在listening事件之前触发connection事件
+假设listen()方法在event loop开始的时候执行，但是listening回调方法被放在了setImmediate()方法中。除非传递一个主机名，否则绑定端口行为将立即执行。
+为了让event loop继续执行，必须到达poll阶段。这意味着存在一种可能一个已被接收的connection可能会在listening事件之前触发connection事件  
+另外一个例子是运行一个构造函数，比如说，继承自<code>EventEmitter</code>而且构造函数内想要调用某个事件
+```
+const EventEmitter = require('events');
+const util = require('util');
+
+function MyEmitter() {
+  EventEmitter.call(this);
+  this.emit('event');
+}
+util.inherits(MyEmitter, EventEmitter);
+
+const myEmitter = new MyEmitter();
+myEmitter.on('event', () => {
+  console.log('an event occurred!');
+});
+```
+上面这段代码有个问题，不能在构造函数中直接调用event，因为构造函数运行的时候event时间监听代码还没执行到。这样的话，在构造函数内部，将调用event事件的代码放到<code>process.nextTick()</code>的回调中，就可以得到期望的结果，在构造方法之后运行。以下是代码：
+```
+const EventEmitter = require('events');
+const util = require('util');
+
+function MyEmitter() {
+  EventEmitter.call(this);
+
+  // use nextTick to emit the event once a handler is assigned
+  process.nextTick(() => {
+    this.emit('event');
+  });
+}
+util.inherits(MyEmitter, EventEmitter);
+
+const myEmitter = new MyEmitter();
+myEmitter.on('event', () => {
+  console.log('an event occurred!');
+});
+```
